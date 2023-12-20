@@ -1,0 +1,5 @@
+name: onboard-ec2
+runtime: nodejs
+description: A minimal AWS TypeScript Pulumi program
+config:
+  publicKeyPath: "/Users/boazosushi3/.ssh/id_rsa.pub"
