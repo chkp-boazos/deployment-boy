@@ -4,13 +4,14 @@ import { readFileSync } from "fs";
 
 const publicKeyPath = new Config().require("publicKeyPath");
 const publicKey = readFileSync(publicKeyPath, "utf-8");
+const privateKeyPath = publicKeyPath.slice(0, -1 * ".pub".length);
 
-const amazonLinuxAmi = aws.ec2.getAmi({
+const ec2Image = aws.ec2.getAmi({
   mostRecent: true,
-  owners: ["amazon"],
+  owners: ["099720109477"],
   filters: [{
     name: "name",
-    values: ["amzn-ami-hvm-*-x86_64-ebs"],
+    values: ["ubuntu/images/hvm-ssd/ubuntu-*-20.04-amd64-server-*"],
   }],
 });
 
@@ -36,12 +37,12 @@ const allowSSH = new aws.ec2.SecurityGroup("allow-ssh", {
 });
 
 const keyPair = new aws.ec2.KeyPair("ssh-key-pair", {
-  keyName: `k3s-instance-key-${getStack()}`,
+  keyName: `ec2-key-${getStack()}`,
   publicKey,
 });
 
-const instance = new aws.ec2.Instance("k3s-instance", {
-  ami: amazonLinuxAmi.then(ami => ami.id),
+const instance = new aws.ec2.Instance("ec2-instance", {
+  ami: ec2Image.then(ami => ami.id),
   instanceType: aws.ec2.InstanceType.T2_Micro,
   vpcSecurityGroupIds: [allowSSH.id],
   keyName: keyPair.keyName,
@@ -50,7 +51,4 @@ const instance = new aws.ec2.Instance("k3s-instance", {
   }
 });
 
-
-export const dns = instance.publicDns;
-export const privateKeyPath = publicKeyPath.slice(0, -1 * ".pub".length); 
-export const command = instance.publicDns.apply(dns => `ssh -i ${privateKeyPath} ec2-user@${dns}`); 
+export const command = instance.publicDns.apply(dns => `ssh -i ${privateKeyPath} ubuntu@${dns}`);
