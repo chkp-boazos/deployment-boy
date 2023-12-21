@@ -6,6 +6,12 @@ const publicKeyPath = new Config().require("publicKeyPath");
 const publicKey = readFileSync(publicKeyPath, "utf-8");
 const privateKeyPath = publicKeyPath.slice(0, -1 * ".pub".length);
 
+const userData = `#!/bin/bash
+mkdir -p /opt/k3s
+wget -O /opt/k3s/install.sh https://get.k3s.io
+chmod +x /opt/k3s/install.sh
+`;
+
 const ec2Image = aws.ec2.getAmi({
   mostRecent: true,
   owners: ["099720109477"],
@@ -46,6 +52,7 @@ const instance = new aws.ec2.Instance("ec2-instance", {
   instanceType: aws.ec2.InstanceType.T2_Micro,
   vpcSecurityGroupIds: [allowSSH.id],
   keyName: keyPair.keyName,
+  userData,
   tags: {
     App: "onboarding-cloudguard",
   }
